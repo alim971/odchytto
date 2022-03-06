@@ -1,0 +1,19 @@
+{
+    "type": "stop",
+    "id": "900000215151",
+    "name": "Boberow",
+    "location": {
+        "type": "location",
+        "latitude": 53.145252,
+        "longitude": 11.615744
+    },
+    "products": {
+        "suburban": false,
+        "subway": false,
+        "tram": false,
+        "bus": true,
+        "ferry": false,
+        "express": false,
+        "regional": false
+    }
+}
