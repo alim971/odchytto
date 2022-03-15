@@ -8,6 +8,8 @@ import 'package:watcher/data/data.dart';
 import 'package:watcher/data/models.dart';
 import 'package:watcher/theme.dart' as theme;
 
+import '../utils.dart';
+
 Future<LocationS?> showPlacesSearch(BuildContext context) async =>
     await showSearch<LocationS>(
       context: context,
@@ -30,9 +32,14 @@ class PlacesSearchDelegate extends SearchDelegate<LocationS> {
 
   @override
   Widget buildLeading(BuildContext context) {
+    final notifier = Provider.of<JourneyNotifier>(context, listen: false);
+
     return IconButton(
       icon: Icon(Icons.arrow_back),
-      onPressed: () => Navigator.of(context).pop(),
+      onPressed: () {
+        notifier.refresh();
+        Navigator.of(context).pop();
+      },
     );
   }
 
@@ -165,18 +172,6 @@ class StopTile extends StatelessWidget {
       onTap: onTap,
     );
   }
-}
-
-List<Icon> getIcons(LocationS location) {
-  List<Icon> icons = [];
-  var types = location.typesAsStrings;
-  if (types.contains('bus')) {
-    icons.add(const Icon(Icons.train));
-  }
-  if (types.contains('train')) {
-    icons.add(const Icon(Icons.directions_bus));
-  }
-  return icons;
 }
 
 class CityTile extends StatelessWidget {

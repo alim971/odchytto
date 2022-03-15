@@ -8,6 +8,34 @@ import 'package:watcher/theme.dart';
 import 'package:watcher/utils.dart';
 import 'package:watcher/widgets/widgets.dart';
 
+// class Route extends StatelessWidget {
+//   Route(this.route);
+//   final data.Route route;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.all(20),
+//       child: Card(
+//         color: berlinBrightYellow,
+//         elevation: 4,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(10),
+//         ),
+//         child: Padding(
+//           padding: const EdgeInsets.all(8),
+//           child: Column(
+//             children: [
+//               ...[for (var leg in journey.legs) Leg(leg)],
+//               PlaceName(journey.legs.last.destination.name ?? ''),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class Journey extends StatelessWidget {
   Journey(this.journey);
   final data.Journey journey;

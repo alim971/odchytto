@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 
 const berlinBrightYellow = Color(0xFFFFD300);
 const berlinDarkYellow = Color(0xFFFFB900);
+const grey = Color(0xD8787878);
 
 final appBarTheme = AppBarTheme(
   elevation: 0,
   color: berlinBrightYellow,
+  foregroundColor: Colors.black,
 );
 
 final ThemeData theme = ThemeData();
@@ -18,6 +20,12 @@ final appTheme = ThemeData(
   primaryColor: berlinBrightYellow,
   colorScheme: theme.colorScheme.copyWith(secondary: berlinDarkYellow),
   appBarTheme: appBarTheme,
+  elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+          primary: berlinDarkYellow,
+          onPrimary: Colors.black,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)))),
 
   // Define the default Font Family
   fontFamily: 'Montserrat',
@@ -25,8 +33,10 @@ final appTheme = ThemeData(
   // Define the default TextTheme. Use this to specify the default
   // text styling for headlines, titles, bodies of text, and more.
   textTheme: TextTheme(
+    displaySmall: TextStyle(color: Colors.black),
     displayLarge: TextStyle(
       fontSize: 36,
+      color: Colors.black,
       fontWeight: FontWeight.bold,
     ),
 
