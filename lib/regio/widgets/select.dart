@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:watcher/common/ads/AdState.dart';
+import 'package:watcher/common/ads/widgets.dart';
 import 'package:watcher/common/data/localization.dart';
 import 'package:watcher/common/utils/dialog.dart';
 import 'package:watcher/common/widgets/builder.dart';
@@ -162,10 +165,77 @@ class PriceClasses extends StatelessWidget {
   final dynamic callback;
   final int freeSeats;
 
+  static const adPerClasses = 3;
+
+  bool isAd(int index) {
+    return AdState.SHOULD_SHOW_ADS &&
+        index % (adPerClasses + 1) == adPerClasses;
+  }
+
+  List<StatelessWidget> getUnavailableSeatClasses(
+      Set<String> diff, AdState adState) {
+    final notAvailable = diff
+        .map((e) => SeatsNotAvailable(
+            seat: seats[e]!, callback: callback, routeId: routeId))
+        .toList();
+    if (!AdState.SHOULD_SHOW_ADS) {
+      return notAvailable;
+    }
+    final List<StatelessWidget> notAvailableWithAds = [];
+    for (var i = 0; i < notAvailable.length; i++) {
+      if (isAd(notAvailableWithAds.length)) {
+        final BannerAd banner = BannerAd(
+          adUnitId: adState.bannerId,
+          size: AdSize.banner,
+          request: const AdRequest(),
+          listener: const BannerAdListener(),
+        )..load();
+        notAvailableWithAds
+            .add(Container(height: 50, child: AdWidget(ad: banner)));
+      }
+      notAvailableWithAds.add(notAvailable[i]);
+    }
+    return notAvailableWithAds;
+  }
+
+  List<StatelessWidget> getAvailableSeatClasses(
+      Map<String, PriceClass> priceClassesMap, AdState adState) {
+    final available = priceClassesMap.keys
+        .map<StatelessWidget>((key) => SeatsAvailable(
+            launch, priceClassesMap[key]!, seats[key]!, callback))
+        .toList();
+    if (!AdState.SHOULD_SHOW_ADS) {
+      return available;
+    }
+    final List<StatelessWidget> availableWithAds = [];
+    for (var i = 0; i <= available.length; i++) {
+      if (isAd(availableWithAds.length)) {
+        final BannerAd banner = BannerAd(
+          adUnitId: adState.bannerId,
+          size: AdSize.banner,
+          request: const AdRequest(),
+          listener: const BannerAdListener(),
+        )..load();
+        availableWithAds
+            .add(Container(height: 50, child: AdWidget(ad: banner)));
+      }
+      if (i < available.length) {
+        availableWithAds.add(available[i]);
+      }
+    }
+    return availableWithAds;
+  }
+
   @override
   Widget build(BuildContext context) {
     final notifier = Provider.of<JourneyNotifier>(context);
-
+    final adState = Provider.of<AdState>(context);
+    final BannerAd banner = BannerAd(
+      adUnitId: adState.bannerId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: const BannerAdListener(),
+    )..load();
     final priceClassesMap = {for (var v in priceClasses) v.id: v};
     final diff = seats.keys.toSet().difference(priceClassesMap.keys.toSet());
     final minPrice = priceClasses.isEmpty
@@ -199,10 +269,9 @@ class PriceClasses extends StatelessWidget {
                   routeId: routeId,
                   freeSeats: freeSeats)
               : SeatsAvailable(launch, anyPrice, anySeat, callback),
-          ...priceClassesMap.keys.map<StatelessWidget>((key) => SeatsAvailable(
-              launch, priceClassesMap[key]!, seats[key]!, callback)),
-          ...diff.map((e) => SeatsNotAvailable(
-              seat: seats[e]!, callback: callback, routeId: routeId)),
+          if (AdState.SHOULD_SHOW_ADS) AdOrSpaceWidget(banner: banner),
+          ...getAvailableSeatClasses(priceClassesMap, adState),
+          ...getUnavailableSeatClasses(diff, adState),
         ]));
   }
 }

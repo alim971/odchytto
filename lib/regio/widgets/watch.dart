@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:watcher/common/ads/AdState.dart';
 import 'package:watcher/common/data/localization.dart';
 import 'package:watcher/common/utils/dialog.dart';
 import 'package:watcher/common/widgets/builder.dart';
@@ -63,6 +65,13 @@ class WatchOptionsSelect extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final adState = Provider.of<AdState>(context);
+    final ad = BannerAd(
+      adUnitId: adState.bannerId, //search ad
+      size: AdSize.banner,
+      request: AdRequest(),
+      listener: BannerAdListener(),
+    )..load();
     final notifier = Provider.of<JourneyNotifier>(context);
 
     return FutureBuilder(
@@ -92,6 +101,8 @@ class WatchOptionsSelect extends StatelessWidget {
                     children: [
                       for (var type in options)
                         WatchOption(type, map, snapshot.data, seatClass),
+                      if (AdState.SHOULD_SHOW_ADS)
+                        Container(height: 50, child: AdWidget(ad: ad)),
                       Center(
                         child: SizedBox(
                           width: MediaQuery.of(context).size.width * 0.5,

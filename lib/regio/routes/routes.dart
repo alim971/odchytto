@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:watcher/common/ads/AdState.dart';
+import 'package:watcher/common/ads/widgets.dart';
 import 'package:watcher/common/data/localization.dart';
 import 'package:watcher/common/utils/utils.dart';
 import 'package:watcher/common/widgets/other.dart';
@@ -15,30 +18,92 @@ class RoutesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final adState = Provider.of<AdState>(context);
+    final BannerAd banner = BannerAd(
+      adUnitId: adState.bannerId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: const BannerAdListener(),
+    )..load();
     return Consumer<JourneyNotifier>(
       builder: (context, notifier, _) => notifier.isError
           ? ErrorMessage(
               errorMessage:
                   AppLocalizations.of(context).error) //notifier.error)
           : notifier.isLoading
-              ? const LoadingCircle()
+              ? Column(
+                  children: [
+                    const Expanded(child: LoadingCircle()),
+                    if (AdState.SHOULD_SHOW_ADS)
+                      AdOrSpaceWidget(banner: banner),
+                  ],
+                )
               : notifier.routes != null && notifier.routes!.isEmpty
-                  ? const ContainerWithIconNoRoutes()
+                  ? ContainerWithIconNoRoutes(banner: banner)
                   : notifier.routes != null && notifier.routes!.isNotEmpty
                       ? RoutesList(notifier.routes!)
-                      : const ContainerWithIcon(),
+                      : ContainerWithIcon(banner: banner),
     );
   }
 }
 
 class RoutesList extends StatefulWidget {
-  const RoutesList(this.routes, {Key? key}) : super(key: key);
+  const RoutesList(this.routes, {Key? key})
+      : super(key: key); //TODO maybe add banner from previous page?
   final List<RouteTransport> routes;
   @override
   _RoutesListState createState() => _RoutesListState();
 }
 
 class _RoutesListState extends State<RoutesList> {
+  static const adPerRoutes = 3;
+
+  bool isAd(int index) {
+    return AdState.SHOULD_SHOW_ADS && index % (adPerRoutes + 1) == adPerRoutes;
+  }
+
+  List<ExpansionPanel> getListWithAds() {
+    final adState = Provider.of<AdState>(context);
+    final routes = widget.routes.map<ExpansionPanel>((RouteTransport route) {
+      return ExpansionPanel(
+        backgroundColor: brightRegioYellow,
+        canTapOnHeader: true,
+        headerBuilder: (BuildContext context, bool isExpanded) {
+          return RouteHeader(route);
+        },
+        body: RouteConnectionDetails(route),
+        isExpanded: route.isExpanded,
+      );
+    }).toList();
+    if (!AdState.SHOULD_SHOW_ADS) {
+      return routes;
+    }
+    final List<ExpansionPanel> routesWithAds = [];
+    for (var i = 0; i < routes.length; i++) {
+      if (isAd(routesWithAds.length)) {
+        final BannerAd myBanner = BannerAd(
+          adUnitId: adState.bannerId,
+          size: AdSize.banner,
+          request: const AdRequest(),
+          listener: const BannerAdListener(),
+        )..load();
+        routesWithAds.add(ExpansionPanel(
+          backgroundColor: brightRegioYellow,
+          headerBuilder: (BuildContext context, bool isExpanded) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 0, 0),
+              child: Container(height: 50, child: AdWidget(ad: myBanner)),
+            );
+          },
+          body: Container(),
+          isExpanded: false,
+        ));
+      }
+      routesWithAds.add(routes[i]);
+    }
+    return routesWithAds;
+  }
+
   @override
   Widget build(BuildContext context) {
     final notifier = Provider.of<JourneyNotifier>(context);
@@ -58,21 +123,17 @@ class _RoutesListState extends State<RoutesList> {
               // expandedHeaderPadding: EdgeInsets.all(0),
               expansionCallback: (int index, bool isExpanded) {
                 setState(() {
-                  widget.routes[index].isExpanded = !isExpanded;
+                  if (isAd(index)) {
+                    return;
+                  }
+                  final int routeIndex = index -
+                      (AdState.SHOULD_SHOW_ADS
+                          ? index ~/ (adPerRoutes + 1)
+                          : 0);
+                  widget.routes[routeIndex].isExpanded = !isExpanded;
                 });
               },
-              children:
-                  widget.routes.map<ExpansionPanel>((RouteTransport route) {
-                return ExpansionPanel(
-                  backgroundColor: brightRegioYellow,
-                  canTapOnHeader: true,
-                  headerBuilder: (BuildContext context, bool isExpanded) {
-                    return RouteHeader(route);
-                  },
-                  body: RouteConnectionDetails(route),
-                  isExpanded: route.isExpanded,
-                );
-              }).toList(),
+              children: getListWithAds(),
             ),
           ],
         )));

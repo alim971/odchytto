@@ -6,7 +6,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:watcher/common/ads/AdState.dart';
 import 'package:watcher/common/data/localization.dart';
 import 'package:watcher/common/utils/shared.dart';
 import 'package:watcher/common/widgets/builder.dart';
@@ -47,7 +49,8 @@ Future<void> main() async {
     provisional: false,
     sound: true,
   );
-
+  final initAds = MobileAds.instance.initialize();
+  final adState = AdState(initAds);
   // if (settings.authorizationStatus == AuthorizationStatus.authorized) {
   //   print('User granted permission');
   // } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
@@ -55,7 +58,8 @@ Future<void> main() async {
   // } else {
   //   print('User declined or has not accepted permission');
   // }
-  runApp(const CatchItApp());
+  runApp(Provider.value(
+      value: adState, builder: (context, child) => const CatchItApp()));
 }
 
 class CatchItApp extends StatefulWidget {

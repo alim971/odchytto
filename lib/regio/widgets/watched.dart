@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:watcher/common/ads/AdState.dart';
+import 'package:watcher/common/ads/widgets.dart';
 import 'package:watcher/common/data/localization.dart';
 import 'package:watcher/common/utils/utils.dart';
 import 'package:watcher/common/widgets/future.dart';
@@ -135,6 +138,13 @@ class WatchedRoutes extends StatelessWidget {
   Widget build(BuildContext context) {
     final notifierJourney =
         Provider.of<JourneyNotifier>(context, listen: false);
+    final adState = Provider.of<AdState>(context);
+    final BannerAd banner = BannerAd(
+      adUnitId: adState.bannerId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: const BannerAdListener(),
+    )..load();
     return Consumer<PrefsNotifier>(
         builder: (context, notifier, _) => OverrideLocalization(
             locale: notifier.locale,
@@ -143,9 +153,13 @@ class WatchedRoutes extends StatelessWidget {
                 builder: (context, AsyncSnapshot<bool> snapshot) {
                   if (snapshot.hasData) {
                     if (!snapshot.data!) {
-                      return Center(
-                        child:
-                            PlaceName(AppLocalizations.of(context).noWatched),
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          PlaceName(AppLocalizations.of(context).noWatched),
+                          if (AdState.SHOULD_SHOW_ADS)
+                            AdOrSpaceWidget(banner: banner),
+                        ],
                       );
                     }
                     return Column(children: [
@@ -155,7 +169,9 @@ class WatchedRoutes extends StatelessWidget {
                       if (futureRoutes.isNotEmpty)
                         Expanded(
                             child: FutureRoutes(
-                                routes: futureRoutes, routeId: routeId))
+                                routes: futureRoutes, routeId: routeId)),
+                      if (AdState.SHOULD_SHOW_ADS)
+                        AdOrSpaceWidget(banner: banner),
                     ]);
                   } else {
                     return BuilderNoData(snapshot);
