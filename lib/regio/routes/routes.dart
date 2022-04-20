@@ -49,7 +49,7 @@ class _RoutesListState extends State<RoutesList> {
         child: SingleChildScrollView(
             child: Column(
           children: [
-            if (prettyDate(widget.routes[0].arrivalTime) !=
+            if (prettyDate(widget.routes[0].departureTime) !=
                 prettyDate(notifier.date))
               Center(
                 child: PlaceName(AppLocalizations.of(context).noRoutes),

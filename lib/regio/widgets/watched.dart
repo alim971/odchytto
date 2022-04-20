@@ -230,7 +230,8 @@ class _FutureRoutesState extends State<FutureRoutes> {
           // expandedHeaderPadding: EdgeInsets.all(0),
           expansionCallback: (int index, bool isExpanded) {
             setState(() {
-              widget.routes[index].isExpanded = !isExpanded;
+              widget.routes[index].isExpanded =
+                  !widget.routes[index].isExpanded;
             });
           },
           children: widget.routes.map<ExpansionPanel>((RouteTransport route) {
@@ -244,7 +245,7 @@ class _FutureRoutesState extends State<FutureRoutes> {
               body: RouteConnectionDetails(route),
               isExpanded: widget.routeId == null || widget.routeId != route.id
                   ? route.isExpanded
-                  : true,
+                  : !route.isExpanded,
             );
           }).toList(),
         ),
